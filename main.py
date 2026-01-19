@@ -1,4 +1,4 @@
-from multiprocessing import Queue
+from multiprocessing import Barrier, Queue
 
 from environment import Environment
 from logger import Logger
@@ -17,15 +17,19 @@ if __name__ == "__main__":
     logger = Logger(log_queue)
     logger.start()
 
+    barrier = Barrier(n_proies + n_predateur)
+
     # Create a pool of prey
     preys = [
-        Prey(environment, duration=sim_duration, log_queue=log_queue)
+        Prey(environment, duration=sim_duration, log_queue=log_queue, barrier=barrier)
         for _ in range(n_proies)
     ]
 
     # Create a pool of predator
     predators = [
-        Predator(environment, duration=sim_duration, log_queue=log_queue)
+        Predator(
+            environment, duration=sim_duration, log_queue=log_queue, barrier=barrier
+        )
         for _ in range(n_predateur)
     ]
 

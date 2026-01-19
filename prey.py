@@ -2,17 +2,19 @@ import random
 import sys
 import time
 from multiprocessing import Process
-from re import L
 
 from color import colorString
 
+# TODO: Create a manager dict for the prey energy
+
 
 class Prey(Process):
-    def __init__(self, environment, duration, log_queue):
+    def __init__(self, environment, duration, log_queue, barrier):
         super().__init__()
         self.environment = environment
         self.duration = duration
         self.log_queue = log_queue
+        self.barrier = barrier
         self.energy = 50.0
 
     def log(self, color, msg):
@@ -36,6 +38,10 @@ class Prey(Process):
         self.environment.register_prey(self.pid, self.energy)
         if self.log_queue is not None:
             self.log("yellow", f"[Prey {self.pid}] Registered in environment")
+
+        # Wait for all the preys to load
+        if self.barrier:
+            self.barrier.wait()
 
         start = time.time()
         while time.time() - start < self.duration:

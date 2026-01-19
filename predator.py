@@ -6,11 +6,12 @@ from color import colorString
 
 
 class Predator(Process):
-    def __init__(self, environment, duration, log_queue):
+    def __init__(self, environment, duration, log_queue, barrier):
         super().__init__()
         self.environment = environment
         self.duration = duration
         self.log_queue = log_queue
+        self.barrier = barrier
         self.energy = 50.0
         self.alivre = True
 
@@ -39,6 +40,10 @@ class Predator(Process):
         return False
 
     def run(self):
+        # Wait for all the preys to load
+        if self.barrier:
+            self.barrier.wait()
+
         start = time.time()
         while time.time() - start < self.duration:
             if self.kill_probability(4):
