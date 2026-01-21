@@ -1,17 +1,16 @@
 import os
 from multiprocessing import Lock, Manager, Value
-
 from color import colorString
-
 
 class Environment:
     def __init__(self, duration, initial_grass=100.0):
         self.duration = duration
         self.grass = Value("d", initial_grass)
-
-        manager = Manager()
+        manager_prey = Manager()
+        manager_pred = Manager()
         self.hunt_lock = Lock()
-        self.prey_dict = manager.dict()
+        self.prey_dict = manager_prey.dict()
+        self.pred_dict = manager_pred.dict()
 
     def consume_grass(self, amount=2.0):
         with self.grass.get_lock():
@@ -23,6 +22,7 @@ class Environment:
                         f"[Environment {os.getpid()}] Grass consumed: {amount}. Remaining grass: {self.grass.value}",
                     )
                 )
+                return True
             else:
                 print(
                     colorString(
@@ -30,26 +30,28 @@ class Environment:
                         f"[Environment {os.getpid()}] Not enough grass to consume. Remaining grass: {self.grass.value}",
                     )
                 )
+                return False
 
     # Give all the methods to interact with the preys
 
     def register_prey(self, pid, energy):
-        self.prey_dict[pid] = True
+        self.prey_dict[pid] = energy
 
     def unregister_prey(self, pid):
         if pid in self.prey_dict:
             del self.prey_dict[pid]
 
+    def upd_prey_energy(self, pid, energy):
+        if pid in self.prey_dict:
+            self.prey_dict[pid] = energy
+    
+    def upd_pred_energy(self, pid, energy):
+        if pid in self.pred_dict:
+            self.pred_dict[pid] = energy
+
     def mark_prey_dead(self, pid):
         with self.hunt_lock:
-            if pid in self.prey_dict and self.prey_dict[pid]:
-                self.prey_dict[pid] = False
-                return True
-            return False
-
-    # def update_prey_energy(self, pid, energy):
-    #     if pid in self.prey_dict:
-    #         self.prey_dict[pid][1] = energy
+            self.prey_dict[pid] = -1.0
 
     def get_alive_preys(self):
-        return [pid for pid, state in self.prey_dict.items() if state]
+        return [pid for pid, energy in self.prey_dict.items() if energy > 0]
