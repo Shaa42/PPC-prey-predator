@@ -35,6 +35,7 @@ class Environment:
 
     def register_prey(self, pid, energy):
         self.prey_dict[pid] = True
+        # print(self.prey_dict)
 
     def unregister_prey(self, pid):
         if pid in self.prey_dict:
