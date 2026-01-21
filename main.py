@@ -1,4 +1,5 @@
-from multiprocessing import Barrier, Queue
+import time
+from multiprocessing import Queue
 
 from environment import Environment
 from logger import Logger
@@ -11,23 +12,32 @@ if __name__ == "__main__":
     n_preys = 5 * n_predators
 
     # Create a new environment
-    environment = Environment(duration=sim_duration, initial_grass=500.0)
+    environment = Environment(
+        duration=sim_duration,
+        initial_grass=500.0,
+    )
+
     log_queue = Queue()
+    reproduction_queue = Queue()
     logger = Logger(log_queue)
     logger.start()
 
-    barrier = Barrier(n_preys + n_predators)
-
     # Create a pool of prey
     preys = [
-        Prey(environment, duration=sim_duration, log_queue=log_queue, barrier=barrier)
+        Prey(
+            environment,
+            duration=sim_duration,
+            log_queue=log_queue,
+        )
         for _ in range(n_preys)
     ]
 
     # Create a pool of predator
     predators = [
         Predator(
-            environment, duration=sim_duration, log_queue=log_queue, barrier=barrier
+            environment,
+            duration=sim_duration,
+            log_queue=log_queue,
         )
         for _ in range(n_predators)
     ]
@@ -49,7 +59,6 @@ if __name__ == "__main__":
     log_queue.put("__STOP__")
     logger.join()
 
-
     print("\nFINAL SIMULATION STATE")
 
     print("Grass remaining: ", environment.grass.value)
@@ -57,7 +66,7 @@ if __name__ == "__main__":
     survivors = [pid for pid, energy in environment.prey_dict.items() if energy > 0]
     print("Preys surviving: ", len(survivors), "/", n_preys)
     for pid in survivors:
-        print("  Prey ", pid, ": ", environment.pred_prey[pid])
+        print("  Prey ", pid, ": ", environment.pred_dict[pid])
 
     print("\nPredator Status:")
     for pid in predators:

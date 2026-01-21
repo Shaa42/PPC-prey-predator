@@ -9,17 +9,18 @@ from color import colorString
 
 
 class Prey(Process):
-    def __init__(self, environment, duration, log_queue, barrier):
+    def __init__(self, environment, duration, log_queue):
         super().__init__()
         self.environment = environment
         self.duration = duration
         self.log_queue = log_queue
-        self.barrier = barrier
+
         self.energy = 50.0
         self.is_high = 90.0
 
     def log(self, color, msg):
-        self.log_queue.put(colorString(color, msg))
+        if self.log_queue is not None:
+            self.log_queue.put(colorString(color, msg))
 
     def gain_energy(self, n):
         self.energy = min(100.0, self.energy + n)
@@ -32,11 +33,8 @@ class Prey(Process):
             self.log("red", f"[Prey {self.pid} starved to death]")
             # Remove prey from manager dict and terminate process
             self.environment.unregister_prey(self.pid)
-            self.log(
-                "yellow", f"[Prey {self.pid}] Unregistered from environment"
-            )
+            self.log("yellow", f"[Prey {self.pid}] Unregistered from environment")
             sys.exit(0)
-
 
     def eat_grass(self):
         if self.environment.consume_grass():
@@ -44,10 +42,12 @@ class Prey(Process):
             self.gain_energy(5.0)
             self.environment.upd_prey_energy(self.pid, self.energy)
         else:
-            self.log("purple", f"[Prey {self.pid} moved to the next vallety in search for grass]")
+            self.log(
+                "purple",
+                f"[Prey {self.pid} moved to the next vallety in search for grass]",
+            )
             self.lose_energy(2.0)
             self.environment.upd_prey_energy(self.pid, self.energy)
-
 
     def run(self):
         self.environment.prey_dict[self.pid] = self.energy
@@ -61,10 +61,8 @@ class Prey(Process):
             self.lose_energy(5.0)
             self.environment.upd_prey_energy(self.pid, self.energy)
 
-
-        # Wait for all the preys to load
-        if self.barrier:
-            self.barrier.wait()
+        # Wait for processes to load
+        time.sleep(0.5)
 
         start = time.time()
         while time.time() - start < self.duration:
@@ -73,15 +71,12 @@ class Prey(Process):
                 self.log("red", f"[Prey {self.pid} died]")
                 # Remove prey from manager dict and terminate process
                 self.environment.unregister_prey(self.pid)
-                self.log(
-                    "yellow", f"[Prey {self.pid}] Unregistered from environment"
-                )
+                self.log("yellow", f"[Prey {self.pid}] Unregistered from environment")
                 sys.exit(0)
 
             self.eat_grass()
             time.sleep(random.uniform(0.5, 1.5))
             self.lose_energy(2.5)
             self.environment.upd_prey_energy(self.pid, self.energy)
-
 
         self.environment.unregister_prey(self.pid)

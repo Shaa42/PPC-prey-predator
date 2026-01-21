@@ -1,6 +1,8 @@
 import os
 from multiprocessing import Lock, Manager, Value
+
 from color import colorString
+
 
 class Environment:
     def __init__(self, duration, initial_grass=100.0):
@@ -44,7 +46,7 @@ class Environment:
     def upd_prey_energy(self, pid, energy):
         if pid in self.prey_dict:
             self.prey_dict[pid] = energy
-    
+
     def upd_pred_energy(self, pid, energy):
         if pid in self.pred_dict:
             self.pred_dict[pid] = energy

@@ -6,12 +6,11 @@ from color import colorString
 
 
 class Predator(Process):
-    def __init__(self, environment, duration, log_queue, barrier):
+    def __init__(self, environment, duration, log_queue):
         super().__init__()
         self.environment = environment
         self.duration = duration
         self.log_queue = log_queue
-        self.barrier = barrier
         self.energy = 60.0
         self.hunger_threshold = 50.0
         self.hunting = False
@@ -42,14 +41,13 @@ class Predator(Process):
                 self.log("blue", f"[Predator {self.pid}] failed to catch its prey.")
                 self.energy -= 10.0
                 self.environment.upd_pred_energy(self.pid, self.energy)
-                
+
         return False
 
     def run(self):
-        self.environment.pred_dict[self.pid] = self.energy
-        # Wait for all the preys to load
-        if self.barrier:
-            self.barrier.wait()
+        # Wait for processes to load
+        time.sleep(0.5)
+
         start = time.time()
         while time.time() - start < self.duration:
             if self.energy <= 0:
@@ -61,7 +59,7 @@ class Predator(Process):
                     self.hunting = True
                     self.log("blue", f"[Predator {self.pid}] Grrrr...Hungry...")
                 self.hunt()
-            
+
             time.sleep(rd.uniform(0.5, 1.0))
             self.energy -= 5.0
             self.environment.upd_pred_energy(self.pid, self.energy)
