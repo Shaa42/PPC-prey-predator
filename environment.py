@@ -5,6 +5,11 @@ from color import colorString
 
 
 class Environment:
+    # mem part
+    # demarre socket pour regist proie pred
+    # proie et pred connect dans init
+    # envoie manager dict
+    #
     def __init__(self, duration, initial_grass=100.0):
         self.duration = duration
         self.grass = Value("d", initial_grass)

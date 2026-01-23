@@ -5,13 +5,10 @@ from multiprocessing import Process
 
 from color import colorString
 
-# TODO: Create a manager dict for the prey energy
-
 
 class Prey(Process):
-    def __init__(self, environment, duration, log_queue):
+    def __init__(self, duration, log_queue):
         super().__init__()
-        self.environment = environment
         self.duration = duration
         self.log_queue = log_queue
 
