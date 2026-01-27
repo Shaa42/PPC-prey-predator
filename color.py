@@ -6,6 +6,7 @@ def colorString(color="", string=""):
     MAGENTA = "\033[35m"
     CYAN = "\033[36m"
     BRIGHT_MAGENTA = "\033[95m"
+    BRIGHT_GREEN = "\033[92m"
     ENDC = "\033[0m"
 
     match color:
@@ -23,5 +24,7 @@ def colorString(color="", string=""):
             return f"{CYAN}{string}{ENDC}"
         case "bright_magenta":
             return f"{BRIGHT_MAGENTA}{string}{ENDC}"
+        case "bright_green":
+            return f"{BRIGHT_GREEN}{string}{ENDC}"
         case _:
             return string

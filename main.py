@@ -1,34 +1,46 @@
-from multiprocessing import Barrier, Queue
+from multiprocessing import Queue
 
+import constants
+from display import Display
 from environment import Environment
-from logger import Logger
 from predator import Predator
 from prey import Prey
 
 if __name__ == "__main__":
-    sim_duration = 20.0
-    n_predateur = 5
-    n_proies = 2 * n_predateur
-
-    # Create a new environment
-    environment = Environment(duration=sim_duration, initial_grass=500.0)
+    sim_duration = constants.SIMULATION_DURATION
+    n_predateur = constants.N_PREDATORS
+    n_proies = constants.N_PREYS
 
     log_queue = Queue()
-    logger = Logger(log_queue)
+    reproduction_queue = Queue()
+    logger = Display(log_queue)
     logger.start()
 
-    barrier = Barrier(n_proies + n_predateur)
+    # Create a new environment
+    envi = Environment(
+        duration=sim_duration + 3,
+        log_queue=log_queue,
+        initial_grass=constants.INITIAL_GRASS,
+    )
+    envi.start()
+
+    # Give the environment time to start
+    # time.sleep(1.0)
 
     # Create a pool of prey
     preys = [
-        Prey(environment, duration=sim_duration, log_queue=log_queue, barrier=barrier)
+        Prey(
+            duration=sim_duration,
+            log_queue=log_queue,
+        )
         for _ in range(n_proies)
     ]
 
     # Create a pool of predator
     predators = [
         Predator(
-            environment, duration=sim_duration, log_queue=log_queue, barrier=barrier
+            duration=sim_duration,
+            log_queue=log_queue,
         )
         for _ in range(n_predateur)
     ]
@@ -46,6 +58,8 @@ if __name__ == "__main__":
 
     for predator in predators:
         predator.join()
+
+    envi.join()
 
     log_queue.put("__STOP__")
     logger.join()

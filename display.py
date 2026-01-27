@@ -1,7 +1,7 @@
 from multiprocessing import Process
 
 
-class Logger(Process):
+class Display(Process):
     def __init__(self, log_queue):
         super().__init__()
         self.log_queue = log_queue
