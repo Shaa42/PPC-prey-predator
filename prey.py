@@ -10,13 +10,14 @@ from color import colorString
 
 
 class Prey(Process):
-    def __init__(self, duration, log_queue):
+    def __init__(self, duration, log_queue, reproduction_queue):
         """
         Prey constructor
         """
         super().__init__()
         self.duration = duration
         self.log_queue = log_queue
+        self.reprod_queue = reproduction_queue
         self.socket = None
         self.energy = constants.PREY_INIT_ENERGY
 
@@ -99,6 +100,19 @@ class Prey(Process):
                 f"[Prey {self.pid}] gained {amount} energy. {self.energy} energy left.",
             )
 
+    def reprod_prey(self):
+        if self.energy >= constants.PREY_REPRODUCTION_THRESHOLD:
+            self.lose_energy(20 + float(rd.randint(5, 20)))
+            response = self.send_request("update_energy", self.energy)
+            if response and response.get("status") == "ok":
+                self.log(
+                    "bright_magenta",
+                    f"[Prey {self.pid}] created an offspring. {self.energy} energy left.",
+                )
+            self.reprod_queue.put("prey")
+            return True
+        return False
+
     def run(self):
         # Connect to environment
         if not self.connect_to_envi():
@@ -128,8 +142,12 @@ class Prey(Process):
                 self.unregister()
                 sys.exit(0)
 
-            time.sleep(rd.uniform(0.0, 1))
+            time.sleep(rd.uniform(0.0, 1.0))
             self.log("green", f"[Prey {self.pid}] is grazing.")
+
+            if self.reprod_prey():
+                return
+
             self.eat_grass(1, constants.PREY_GRASS_EAT + float(rd.randint(-2, 2)))
             self.lose_energy(constants.PREY_ENERGY_LOSS + float(rd.randint(-2, 5)))
             time.sleep(rd.uniform(2.0, 3.0))

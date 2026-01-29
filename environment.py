@@ -179,6 +179,14 @@ class Environment(Process):
 
         return response
 
+    def grass_regrowth(self):
+        while True:
+            time.sleep(0.5)
+            with self.grass_lock:
+                if self.grass.value < 1000:
+                    self.grass.value += 20.0
+                    self.log("yellow", f"Grass regrew to {self.grass.value} units.")
+
     def run(self):
         HOSTNAME = "localhost"
         PORT = 8558
@@ -187,6 +195,7 @@ class Environment(Process):
         server_socket.bind((HOSTNAME, PORT))
         server_socket.listen(16)
         server_socket.settimeout(1.0)
+        threading.Thread(target=self.grass_regrowth, daemon=True).start()
 
         try:
             start = time.time()
