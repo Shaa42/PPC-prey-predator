@@ -10,13 +10,14 @@ from color import colorString
 
 
 class Predator(Process):
-    def __init__(self, duration, log_queue):
+    def __init__(self, duration, log_queue, reproduction_queue):
         """
         Predator constructor
         """
         super().__init__()
         self.duration = duration
         self.log_queue = log_queue
+        self.reprod_queue = reproduction_queue
         self.socket = None
         self.energy = constants.PREDATOR_INIT_ENERGY
 
@@ -75,7 +76,7 @@ class Predator(Process):
     def kill_prey(self, prey):
         succes = self.send_request("mark_dead", {"pid": prey, "type": "prey"})
         if succes and succes.get("status") == "ok":
-            self.log("blue", f"[Predator {self.pid}] killed prey {prey}")
+            self.log("red", f"[Predator {self.pid}] killed prey {prey}")
             self.gain_energy(constants.PREDATOR_PREY_EAT + float(rd.randint(-5, 5)))
 
     def kill_probability(self, n):
@@ -112,6 +113,19 @@ class Predator(Process):
                 f"[Predator {self.pid}] gained {amount} energy. {self.energy} energy left.",
             )
 
+    def reprod_pred(self):
+        if self.energy >= constants.PREDATOR_REPRODUCTION_THRESHOLD:
+            self.lose_energy(30 + float(rd.randint(-5, 20)))
+            response = self.send_request("update_energy", self.energy)
+            if response and response.get("status") == "ok":
+                self.log(
+                    "bright_magenta",
+                    f"[Predator {self.pid}] produced an offspring. {self.energy} energy left.",
+                )
+            self.reprod_queue.put("predator")
+            return True
+        return False
+
     # Main logic
     def run(self):
         # Connect to environment
@@ -138,8 +152,12 @@ class Predator(Process):
                 sys.exit(0)
 
             time.sleep(rd.uniform(0.0, 2.0))
+
+            if self.reprod_pred():
+                return
+
             self.log("blue", f"[Predator {self.pid}] is on the hunt.")
-            if self.kill_probability(4):
+            if self.kill_probability(constants.PREDATOR_KILL_PROBABILITY):
                 if not self.hunt():
                     self.log("blue", f"[Predator {self.pid}] killed no prey.")
             self.lose_energy(constants.PREDATOR_ENERGY_LOSS + float(rd.randint(-2, 5)))
