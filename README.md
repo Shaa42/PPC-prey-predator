@@ -2,7 +2,7 @@
 
 Projet Python - Simulation Proie-Prédateur
 
-Ce projet implémente une simulation simple d'un écosystème proie-prédateur en utilisant Python. Chaque agents (proie ou prédateur) sont des processus indépendant qui interagissent avec l'environnement qui agit comme serveur et mémoire partagée.
+Ce projet implémente une simulation simple d'un écosystème proie-prédateur en utilisant Python. Chaque agent (proie ou prédateur) est un processus indépendant qui interagit avec l'environnement qui agit comme un serveur et une mémoire partagée.
 
 ## Pré-requis
 - Python 3.10+
